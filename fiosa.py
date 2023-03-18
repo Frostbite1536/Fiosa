@@ -1,12 +1,13 @@
 import openai
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import json
 import re
 import threading
 import queue
 import subprocess
 from datetime import date
+import platform
 
 longterm_memories_file = open("LongTermMemories.txt", 'r')
 longterm_memories = longterm_memories_file.read()
@@ -133,38 +134,44 @@ openai.api_key = data['openai_token']
 #   if (userinput == "Quit" or userinput == "Goodbye" or userinput == "Bye" or userinput == "Bye!" or userinput == "Goodbye!"):
 #       break
 
-root = tk.Tk()
-chat_window = ChatWindow(root)
 
-def handle_closing():
-    global prompt_to_inject
-    global conversation_history
+os_name = platform.freedesktop_os_release().get("NAME")
 
-    if (conversation_history == ''):
+if (os_name != "Ubuntu"):
+    messagebox.showerror("System not supported!", "You are currently running " + os_name + ". Only Ubuntu is supported!")
+else:
+    root = tk.Tk()
+    chat_window = ChatWindow(root)
+
+    def handle_closing():
+        global prompt_to_inject
+        global conversation_history
+
+        if (conversation_history == ''):
+            root.destroy()
+            return
+
+        message = "System: Hello Fiosa, this is the System. The user is closing you now, is there anything from the conversation you would like to add to your long term memories? Reply only with the memories themselves like this 'Memory: <the current date> <the memory>', nothing else as your response will be added directly into your memory database. Also, please only add this latest memory, don't write all of them again."
+        chat_window.chat_log.insert(tk.END, "\nFiosa: Goodbye, please wait while I save my memories of this conversation :)")
+        chat_window.message_entry.delete(0, tk.END)
+        conversation_history = conversation_history + "\n" + "User: " + message
+
+        completion = run_prompt(prompt_to_inject, conversation_history, "gpt-3.5-turbo")
+
+        longterm_memories_file_write = open("LongTermMemories.txt", 'w')
+        longterm_memories_file_write.write(longterm_memories + completion.choices[0].message.content + "\n") # Save to Fiosa's long-term memory.
+        longterm_memories_file_write.close()
+
         root.destroy()
-        return
-
-    message = "System: Hello Fiosa, this is the System. The user is closing you now, is there anything from the conversation you would like to add to your long term memories? Reply only with the memories themselves like this 'Memory: <the current date> <the memory>', nothing else as your response will be added directly into your memory database. Also, please only add this latest memory, don't write all of them again."
-    chat_window.chat_log.insert(tk.END, "\nFiosa: Goodbye, please wait while I save my memories of this conversation :)")
-    chat_window.message_entry.delete(0, tk.END)
-    conversation_history = conversation_history + "\n" + "User: " + message
-
-    completion = run_prompt(prompt_to_inject, conversation_history, "gpt-3.5-turbo")
-
-    longterm_memories_file_write = open("LongTermMemories.txt", 'w')
-    longterm_memories_file_write.write(longterm_memories + completion.choices[0].message.content + "\n") # Save to Fiosa's long-term memory.
-    longterm_memories_file_write.close()
-
-    root.destroy()
 
 
-root.tk_setPalette(background='#1E1E1E', foreground='white',
-                   activeBackground='gray30', activeForeground='white', 
-                   highlightBackground='#1E1E1E', highlightColor='white')
+    root.tk_setPalette(background='#1E1E1E', foreground='white',
+                    activeBackground='gray30', activeForeground='white', 
+                    highlightBackground='#1E1E1E', highlightColor='white')
 
-style = ttk.Style()
+    style = ttk.Style()
 
 
 
-root.protocol("WM_DELETE_WINDOW", handle_closing)
-root.mainloop()
+    root.protocol("WM_DELETE_WINDOW", handle_closing)
+    root.mainloop()
