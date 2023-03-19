@@ -6,3 +6,17 @@ Fiosa is an AI chatbot built on top of ChatGPT's API. It has full integration in
 
 Fiosa is written in Python, and it uses a technique called Prompt Injection to have a memory of the conversation, and also to give it rules and directives for providing a good experience.
 
+## Project roadmap
+
+- [x] Basic chat functionality
+- [x] Ability to remember past messages in the conversation
+- [x] System prompt finished
+- [x] Ability to run commands
+- [x] Tackle hallucinations via refinements to system prompt
+- [ ] Revamp UI
+- [ ] System tray icon (in the background)
+- [ ] Port/test on other Linux distributions
+- [ ] Voice-to-text and text-to-speech (kind of like Siri or Alexa)
+- [ ] Ability to know what is currently running/onscreen to better know how to assist user
+- [ ] Consider porting to Darwin/OSX
+- [ ] Heck, even port it to *Windows*?
