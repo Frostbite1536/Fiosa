@@ -27,16 +27,23 @@ def process_command_queue():
             cmd_run = run_command(cmd)
                 
             output = cmd_run.stdout.read().decode() # stdout
+            stderr = cmd_run.stderr
 
             print("[DEBUG] Output: ", output)
             if (output):
                 prompt_to_inject = prompt_queue.get()
                 if (cmd_run.returncode != 0):
                     conversation_history += "\n" + "[INTERNAL] Do not show to user: Return code of command is not zero."
-                if (output != ""): # The AI gets confused if there's an empty command output
-                    conversation_history += "\n" + "[INTERNAL] Do not show to user: Command output: " + output
-            else:
-                conversation_history += "\n" + "[INTERNAL] Do not show to user: No output recieved from command."
+                elif stderr:
+                    conversation_history += "\n" + "[INTERNAL] Do not show to user: Command returned error: " + stderr.read().decode()
+                elif output:
+                    conversation_history += "\n" + "[INTERNAL] Do not show to user: Command returned output: " + output
+                else:
+                    conversation_history += "\n" + "[INTERNAL] Do not show to user: Command produced no output or error."  
+            #     if (output != ""): # The AI gets confused if there's an empty command output
+            #         conversation_history += "\n" + "[INTERNAL] Do not show to user: Command output: " + output
+            # else:
+            #     conversation_history += "\n" + "[INTERNAL] Do not show to user: No output recieved from command."
 
             print("[DEBUG] Running completion")
             completion = run_prompt(prompt_to_inject, conversation_history, "gpt-3.5-turbo")
